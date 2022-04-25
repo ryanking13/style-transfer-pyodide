@@ -1,0 +1,3 @@
+[submodule "python/fast-neural-style-pytorch"]
+	path = python/fast-neural-style-pytorch
+	url = https://github.com/rrmina/fast-neural-style-pytorch
