@@ -26,7 +26,7 @@ def convert(style_transform_path, width, height):
 
 convert(
     # style_transform_path="fast-neural-style-pytorch/transforms/mosaic.pth",
-    style_transform_path="mosaic_TransformerResNextNetwork_Pruned10.pth",
+    style_transform_path="weights/mosaic_TransformerResNextNetwork_Pruned10.pth",
     width=640,
     height=360,
 )
