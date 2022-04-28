@@ -1,2 +1,5 @@
 *.onnx
 __pycache__
+*.tar.gz
+*.tar
+*.jpg
