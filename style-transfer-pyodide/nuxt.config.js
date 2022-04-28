@@ -60,4 +60,7 @@ export default {
       }
     },
   },
+  router: {
+    base: '/style-transfer-pyodide/',
+  },
 };
