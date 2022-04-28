@@ -24,8 +24,8 @@ import GithubRibbon from '~/components/GithubRibbon';
 import Upload from '~/components/UploadBox';
 import Loading from '~/components/LoadingModal';
 import api from '~/api/api';
-import helper from '~/api/helper';
 import utils from '~/api/utils';
+// import helper from '~/api/helper';
 
 export default {
   name: 'IndexPage',
