@@ -8,14 +8,13 @@ def initialize_network(onnx_path):
     # print(net.getLayerNames())
 
 
-def stylize(img_path, width=None, height=None):
+def stylize(img_path, max_width=None):
     img = cv.imread(img_path, cv.IMREAD_COLOR)
     h, w, c = img.shape
 
-    if width is None:
-        width = w
-    if height is None:
-        height = h
+    if max_width is not None and max_width < w:
+        h = int(h * (max_width / w))
+        w = max_width
         
     blob = cv.dnn.blobFromImage(img, 1.0, (w, h))
     net.setInput(blob)
@@ -27,6 +26,10 @@ def stylize(img_path, width=None, height=None):
     return out
 
 if __name__ == "__main__":
-    initialize_network("model.onnx")
+    initialize_network("mosaic.onnx")
     out = stylize("fast-neural-style-pytorch/images/up-diliman.jpg")
-    cv.imwrite("stylized.jpg", out)
+    cv.imwrite("mosaic.jpg", out)
+
+    initialize_network("udnie.onnx")
+    out = stylize("fast-neural-style-pytorch/images/mosaic.jpg")
+    cv.imwrite("udnie.jpg", out)
