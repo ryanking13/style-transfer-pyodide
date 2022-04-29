@@ -1,6 +1,8 @@
 <template>
   <sui-dimmer :active="active" inverted>
-    <sui-loader :content="message" />
+    <sui-loader size="large">
+        {{ message }}
+    </sui-loader>
   </sui-dimmer>
 </template>
 

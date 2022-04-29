@@ -8,7 +8,18 @@ async function downloadResource(url) {
   return buffer;
 }
 
+async function getImageDimensions(file) {
+  return new Promise((resolved) => {
+    const i = new Image();
+    i.onload = () => {
+      resolved({ w: i.naturalWidth, h: i.naturalHeight });
+    };
+    i.src = file;
+  });
+}
+
 export default {
   convertDataURIToBinary,
   downloadResource,
+  getImageDimensions,
 };

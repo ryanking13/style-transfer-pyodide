@@ -27,13 +27,13 @@ body {
 .dropzone {
   background: white;
   border-radius: 5px;
-  border: 2px dashed #9b42f5;
+  border: 2px dashed #3372f5;
   border-image: none;
   max-width: 500px;
   margin-left: auto;
   margin-right: auto;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-top: 30px;
+  margin-bottom: 30px;
 }
 #dropzone .dz-preview {
   width: 160px;

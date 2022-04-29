@@ -5,10 +5,20 @@
     <section class="container">
       <div>
         <div>
-          <h1 is="sui-header" color="violet" text-align="center">
+          <h1 is="sui-header" color="blue" text-align="center">
             Pyodide style transfer playground
           </h1>
           <upload :onAdd="onImageAdd" />
+        </div>
+        <div class="subcontainer">
+          <sui-button-group>
+            <sui-button :color="style === 'mosaic' ? 'blue': 'grey'" :active="style === 'mosaic'" @click="setStyle('mosaic')">Style: Mosaic</sui-button>
+            <sui-button-or />
+            <sui-button :color="style === 'udnie' ? 'blue': 'grey'" :active="style === 'udnie'" @click="setStyle('udnie')">Style: Udnie</sui-button>
+          </sui-button-group>
+        </div>
+        <div class="subcontainer">
+          <sui-checkbox label="Resize Image (makes inference faster)" toggle v-model="resize" />
         </div>
         <div>
           <img id="image-before" src="" alt="" />
@@ -25,7 +35,7 @@ import Upload from '~/components/UploadBox';
 import Loading from '~/components/LoadingModal';
 import api from '~/api/api';
 import utils from '~/api/utils';
-// import helper from '~/api/helper';
+import helper from '~/api/helper';
 
 export default {
   name: 'IndexPage',
@@ -35,6 +45,8 @@ export default {
       pyodideLoaded: false,
       isLoading: false,
       loadingMessage: '',
+      resize: false,
+      style: 'mosaic',
     };
   },
   components: {
@@ -47,7 +59,7 @@ export default {
       this.isLoading = status;
     },
     setLoadingMessage(message) {
-      this.loadingMessage = message;
+      this.loadingMessage = message.trim();
     },
     onImageAdd(file) {
       const reader = new FileReader();
@@ -58,10 +70,16 @@ export default {
       reader.readAsDataURL(file);
     },
     async runInference(img) {
+      const imgSize = await utils.getImageDimensions(img);
       await this.saveImage(img, 'image.jpg');
-      const imgStylized = await this.stylize('image.jpg');
-      document.getElementById('image-before').src = img;
-      document.getElementById('image-after').src = imgStylized;
+      try {
+        const imgStylized = await this.stylize('image.jpg', imgSize);
+        document.getElementById('image-before').src = img;
+        document.getElementById('image-after').src = imgStylized;
+      } catch (e) {
+        this.setLoading(false);
+        console.error(e);
+      }
     },
     async saveImage(img, path) {
       const imgBinary = utils.convertDataURIToBinary(img);
@@ -79,16 +97,24 @@ export default {
         `,
       );
     },
-    async stylize(imgPath) {
+    async stylize(imgPath, imgSize) {
       this.setLoading(true);
-      this.setLoadingMessage('Running stylize');
+      this.setLoadingMessage('Running stylization...');
 
+      if (imgSize.w * imgSize.h > 1000000) {
+        this.setLoadingMessage(`
+          Running stylization...
+          (If the image is large, it can take 1~2 minutes)
+        `);
+      }
+
+      const maxWidth = this.resize ? 500 : 1500;
       await api.runScript(
         this.pyodideWorker,
         `
-        img = stylize.stylize("${imgPath}")
+        img = stylize.stylize("${imgPath}", ${maxWidth})
         cv.imwrite("image_stylized.jpg", img)
-      `,
+        `,
       );
 
       const data = await api.readFile(
@@ -100,6 +126,18 @@ export default {
 
       this.setLoading(false);
       return url;
+    },
+    async setStyle(style) {
+      const stylePath = {
+        mosaic: 'mosaic.onnx',
+        udnie: 'udnie.onnx',
+      }[style];
+
+      await api.runScript(
+        this.pyodideWorker,
+        `stylize.initialize_network("${stylePath}")`,
+      );
+      this.style = style;
     },
     async init() {
       this.pyodideLoaded = false;
@@ -123,16 +161,18 @@ export default {
         this.pyodideWorker,
         `
         import stylize
-        stylize.initialize_network("model.onnx")
         `,
       );
+      await this.setStyle(this.style);
 
       this.setLoading(false);
       this.pyodideLoaded = true;
     },
   },
   async mounted() {
-    // helper.debug();
+    if (process.env.NODE_ENV !== 'production') {
+      helper.debug();
+    }
 
     await this.init();
   },
@@ -142,11 +182,16 @@ export default {
 <style scoped>
 .container {
   max-width: 100%;
-  min-height: 100vh;
+  min-height: 80vh;
   display: flex;
   justify-content: center;
   align-items: center;
   text-align: center;
+}
+.subcontainer {
+  max-width: 100%;
+  margin-top: 10px;
+  margin-bottom: 15px;
 }
 img {
   max-width: 40%;
